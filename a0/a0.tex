@@ -74,11 +74,22 @@
 \section*{Problem 3}
 
 \begin{enumerate}
-	\item 
-	\item 
-	\item 
-	\item 
-	\item
+	\item The optimality condition is $f'(x) = (A + A^T)X + b = 0$. This optimum is for minimum since $f''(x) = A + A^T$ and $||f''(x)|| > 0$ since $||A + A^T|| > 0$ for the given $A$.
+	\item The algorithm for gaussian elimination is as follows,
+	 \lstset{caption={Gaussian Elimination (LU Decomposition)}}
+	 \lstset{label={lst:alg1}}
+	 \begin{lstlisting}[style = Python][mathescape]
+	 U = A + AT; L = I
+	 for k = 1 to m-1
+	 	for j = k+1 to m
+	 		l[j][k] = u[j][k] / u[k][k]
+	 		u[j][k:m] = u[j][k:m] - l[j][k] * u[k][k:m]
+	 Y = L^-1 * -b // Back Substitution
+	 X = U^-1 * Y // Back Substitution
+	 \end{lstlisting}
+	\item The above program is implemented in sgauss.m file.
+	\item There is no trouble for the current case. However, if the pivot element is $0$ in any iteration, the algorithm breaks. Hence, Gaussian elimination with partial pivoting (interchange of rows) is required to overcome this problem.
+	\item The modified program with partial pivoting is implemented in sgausspivot.m file.
 \end{enumerate}
 
 \section*{Problem 4}
@@ -98,7 +109,18 @@
 
 \section*{Problem 5}
 
-   
+The following contour plot was taken gridded dataset downloaded from [1]
 
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.9\linewidth]{2.png}
+	\caption{Average Temperature Contour Plot}
+\end{figure}
+  
+\section*{References}
+
+\begin{enumerate}
+	\item http://berkeleyearth.lbl.gov/auto/Global/Gridded/Complete\_TAVG\_EqualArea.nc
+\end{enumerate}
 
 \end{document}
