@@ -11,6 +11,14 @@
 \usepackage{listings}
 \usepackage{hyperref}
 \usepackage{tikz}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[backend=bibtex]{biblatex}
+
+\addbibresource{ds211_lec17_notes.bib} 
+
+
 
 \hypersetup{%
   colorlinks=true,
@@ -50,6 +58,10 @@
 
 
 \begin{document}
+	
+\begin{center}
+	\section*{Linear Programming - II}
+\end{center} 
 
 \section{Standard Form}
 
@@ -90,7 +102,7 @@ Let us consider the following linear programming problem as an example,
 \begin{equation*}
 \min \text{ } x_1+2x_2, \text{ subject to } x_1 \leq 1 \text{, } x_1 + x_2 \leq 2\text{, } x_1 \geq 0\text{, } x_2 \geq 0
 \end{equation*}
-Adding slack variables $x_3$ and $x_4 \in S$ to the constraints to convert to standard form, we get,
+Adding slack variables $x_3$ and $x_4 \in S$ to the constraints to convert to standard form, we get
 \[
 A =  \begin{bmatrix}
 1 & 0 & 1 & 0 \\
@@ -108,7 +120,7 @@ A =  \begin{bmatrix}
 
 Figure:~\ref{fig1} illustrates the constraints and the four vertices of the feasible polytope formed by the constraints of the above example. It can be observed that exactly 2 out of 4 variables are non-zero (active) since Rank$(A)=2$ and exactly 1 variable changes to active and 1 variable changes to inactive when we move one vertex to any of its neighbouring vertices.
 
-Also, the solution to this problem lies in one of the vertices of the feasible polytope. This means we have to iterate over $n_{C_m}$ possible vertices to find the optimum solution in a brute force approach. This is combinatorially expensive and so simplex method provides an efficient way of searching this set of vertices.
+Also, the solution to this problem lies in one of the vertices of the feasible polytope. This means we have to iterate over $n_{C_m}$ possible vertices to find the optimum solution in a brute force approach. This is combinatorically expensive and so simplex method provides an efficient way of searching this set of vertices.
 
 \subsection{Definitions}
 
@@ -125,6 +137,95 @@ Also, the solution to this problem lies in one of the vertices of the feasible p
 	      \end{center}		  
 \end{itemize}
 
+\subsection{Mechanics}
+
+The fundamental idea is to move from a feasible vertex to one of its neighbours efficiently and continue to do this till the optimum is reached. In each movement, one index from basic set is swapped with an index from non-basic set. We apply the KKT first order conditions to derive the algorithm. We have
+\begin{equation}
+Ax = Bx_B + Nx_N = b \text{ and } x_N = 0 \implies x_B = B^{-1}b
+\end{equation}
+Also we have from KKT conditions,
+\begin{equation*}
+	A^T\lambda+S = c
+\end{equation*}
+\begin{equation}
+		B^T\lambda+N^T\lambda+S_B+S_N=c_B+c_N
+\end{equation}
+We choose $S_B = 0$ so as to satisfy complementarity KKT condition $(x^TS=0)$. The above equation is then partitioned as,
+\begin{equation*}
+B^T\lambda = c_B \text{ and } N^T\lambda+S_N=c_N
+\end{equation*}
+\begin{equation}
+\implies \lambda = (B^T)^{-1}c_B
+\label{eqn3}
+\end{equation}
+\begin{equation}
+\implies S_N = c_N - (B^{-1}N)^Tc_B
+\end{equation}
+$S_N$ is called as the \emph{pricing variable} and its components are called as the \emph{reduced costs} of the non-basic variables $x_N$. They denote the unit decrease in objective function that can be achieved by using the corresponding $x_N$.
+
+A new index $q$ is chosen from $\mathcal{N}$ such that $s_q \in S_N$ is the most negative value. This ensures that the objective decreases by largest possible value. If $s_q \geq 0, \forall q \in \mathcal{N}$, then the optimum is found and algorithm is terminated. Let $x^+$ be the new iterate and we have
+\begin{equation*}
+Ax^+ = Bx^+_B + A_qx^+_q = Bx_B = Ax
+\end{equation*}
+\begin{equation}
+\implies x^+_B = x_B - B^{-1}A_qx^+_q
+\label{eqn5}
+\end{equation}
+At the new vertex, $x_p = 0, p \in \mathcal{B}$. This index $p$ is removed from $\mathcal{B}$ and moved to non-basic set $\mathcal{N}$. If $p$ is not unique, then we have a degenerate case which is dealt in a different manner not in the scope of this lecture. We will look at how the objective function gets affected by this process. From eqn. \ref{eqn5} we have
+\begin{equation}
+c^Tx^+ = c^T_Bx^+_B + c_qx^+_q = c^T_Bx_B - c^T_BB^{-1}A_qx^+_q + c_qx^+_q
+\label{eqn6}
+\end{equation}
+From eqn. \ref{eqn3}, $c^T_BB^{-1} = \lambda^T$ and $A^T_q\lambda = c_q - s_q$. Therefore,
+\begin{equation*}
+c^T_BB^{-1}A_qx^+_q = (c_q - s_q)x^+_q
+\end{equation*}
+Substituting the above equation in \ref{eqn6}, we get
+\begin{equation*}
+c^Tx^+ = c^T_Bx_B + c_qx^+_q - (c_q - s_q)x^+_q
+\end{equation*}
+\begin{equation}
+\implies c^Tx^+ = c^Tx + s_qx^+_q
+\label{eqn7}
+\end{equation}
+Since we chose q such that $x_q \le 0$, objective is decreased whenever $x^+_q \ge 0$. If it is possible to increase $x^+_q$ to $\infty$ without encountering a new vertex, then the problem is unbounded.
+
+\subsubsection*{Theorem 1 (13.4 from \cite{nocedal2006numerical})} 
+If the linear program is nondegenerate and bounded, the simplex method terminates at a basic optimal point.
+
 \subsection{Algorithm}
+
+\nocite{*}
+
+The overall algorithm for a single iteration is described below. The inputs are $\mathcal{B}$, $\mathcal{N}$, $b$, $c$, $x_B$ and $x_N=0$ and the outputs are $\mathcal{B^+}$, $\mathcal{N^+}$ and $x^+_B$.
+
+\begin{algorithm}[H]
+	\caption{Revised Simplex}
+	\begin{algorithmic}[1]		
+		\Function{Simplex}{$\mathcal{B},\mathcal{N},b,c$}
+		\State Solve $B^T\lambda = c_B$ for $\lambda$.
+		\State Compute $S_N = c_N - N^T\lambda $.		
+		\If {$S_N \geq 0$}
+			\State Found Optimal. Terminate algorithm.
+		\Else
+			\State Select $q \in \mathcal{N}$ where $s_q$ is the most negative.
+			\State Solve $Bd = A_q$ for $d$.
+			\If {$d \leq 0$}
+				\State Unbounded problem. Terminate Algorithm.
+			\Else
+				\State $x^+_q = \min_{i, d_i \ge 0} \frac{(x_B)_i}{d_i}$. Let $p$ denote the minimizing $i$. \Comment{Ratio Test} 
+				\State $x^+_B = x_B - dx^+_q$
+				\State $x^+_N = (0,\dots,0,x^+_q,0,\dots,o)^T$
+				\State Change $\mathcal{B^+} = (\mathcal{B} \setminus \{p\}) \cup \{q\} $, $\mathcal{N^+} = (\mathcal{N} \setminus \{q\}) \cup \{p\} $
+			\EndIf
+		\EndIf
+		\EndFunction
+		
+	\end{algorithmic}
+\end{algorithm}
+
+It must be noted that the value of objective decreases in most of the steps but not always.
+
+\printbibliography
 
 \end{document}
