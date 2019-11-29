@@ -118,11 +118,12 @@ A =  \begin{bmatrix}
 \end{bmatrix}
 \]
 
-Figure:~\ref{fig1} illustrates the constraints and the four vertices of the feasible polytope formed by the constraints of the above example. It can be observed that exactly 2 out of 4 variables are non-zero (active) since Rank$(A)=2$ and exactly 1 variable changes to active and 1 variable changes to inactive when we move one vertex to any of its neighbouring vertices.
+Figure:~\ref{fig1} illustrates the constraints and the four vertices of the feasible polytope formed by these constraints of the above example. It can be observed that exactly 2 out of 4 variables are non-zero (active) since Rank$(A)=2$ and exactly 1 variable changes to active and 1 variable changes to inactive when we move one vertex to any of its neighbouring vertices.
 
 Also, the solution to this problem lies in one of the vertices of the feasible polytope. This means we have to iterate over $n_{C_m}$ possible vertices to find the optimum solution in a brute force approach. This is combinatorically expensive and so simplex method provides an efficient way of searching this set of vertices.
 
 \subsection{Definitions}
+\label{def}
 
 \begin{itemize}
 	\item $\mathcal{B}$ denotes the subset of index set $\mathcal{I} = \{1,2,\dots,n\}$ containing exactly $m$ indices such that $i \notin \mathcal{B} \implies x_i = 0$. This is called the basic set.
@@ -139,7 +140,7 @@ Also, the solution to this problem lies in one of the vertices of the feasible p
 
 \subsection{Mechanics}
 
-The fundamental idea is to move from a feasible vertex to one of its neighbours efficiently and continue to do this till the optimum is reached. In each movement, one index from basic set is swapped with an index from non-basic set. We apply the KKT first order conditions to derive the algorithm. We have
+The fundamental idea is to move from a feasible vertex to one of its feasible neighbours efficiently and continue to do this till the optimum is reached. In each movement, one index from basic set is swapped with an index from non-basic set. We apply the KKT first order conditions to derive the algorithm. We have
 \begin{equation}
 Ax = Bx_B + Nx_N = b \text{ and } x_N = 0 \implies x_B = B^{-1}b
 \end{equation}
@@ -197,12 +198,14 @@ If the linear program is nondegenerate and bounded, the simplex method terminate
 
 \nocite{*}
 
-The overall algorithm for a single iteration is described below. The inputs are $\mathcal{B}$, $\mathcal{N}$, $b$, $c$, $x_B$ and $x_N=0$ and the outputs are $\mathcal{B^+}$, $\mathcal{N^+}$ and $x^+_B$.
+The overall algorithm for a single iteration is described below. The inputs are $\mathcal{B}$, $\mathcal{N}$, $A$, $b$, $c$ and $x_N=0$ and the outputs are $\mathcal{B^+}$, $\mathcal{N^+}$ and $x^+_B$.
 
 \begin{algorithm}[H]
 	\caption{Revised Simplex}
 	\begin{algorithmic}[1]		
-		\Function{Simplex}{$\mathcal{B},\mathcal{N},b,c$}
+		\Function{Simplex}{$\mathcal{B},\mathcal{N},A,b,c$}
+		\State Obtain $B$ and $N$ as given in section \ref{def}
+		\State Solve $Bx_B = b$ for $x_B$.
 		\State Solve $B^T\lambda = c_B$ for $\lambda$.
 		\State Compute $S_N = c_N - N^T\lambda $.		
 		\If {$S_N \geq 0$}
@@ -225,6 +228,10 @@ The overall algorithm for a single iteration is described below. The inputs are 
 \end{algorithm}
 
 It must be noted that the value of objective decreases in most of the steps but not always.
+
+\section{Additional Notes}
+
+There are several challenges and common pitfalls in implementing the revised simplex algorithm. These include pricing and selection of the entering index; starting the simplex method and handling degenerate steps. It is suggested to go through the Section $13.5$ from \cite{nocedal2006numerical} for more details. Also, there are other techniques collectively known as Interior-Point Methods to efficiently solve LP. Details of these can be found in Chapter $14$ of \cite{nocedal2006numerical}.
 
 \printbibliography
 
